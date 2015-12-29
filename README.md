@@ -14,7 +14,7 @@ $ mvn clean package
 ```
 
 ## Setting Up
-1. In order for s3video to work with AWS web services, create API credentials that have sufficient permissions. Rename the custom_template.properties file to custom.properties. Put the key and secret into the custom.properties file.
+  - In order for s3video to work with AWS web services, create API credentials that have sufficient permissions. Rename the custom_template.properties file to custom.properties. Put the key and secret into the custom.properties file.
 
 The following permission is required, attach this policy to your user. Replace account-id with your account id.
 
@@ -128,8 +128,9 @@ The following permission is required, attach this policy to your user. Replace a
     ]
 }
 ```
-2. Put an email address in the custom.properties file to receive billing alarms. 
-3. The billing alarm is set to $1 by default. You can change it by editing the aws.cloudwatch.alarm.threshold in default.properties.
+
+  - Put an email address in the custom.properties file to receive billing alarms. 
+  - The billing alarm is set to $1 by default. You can change it by editing the aws.cloudwatch.alarm.threshold in default.properties.
 
 ## Usage
 ### Initialize AWS web services
@@ -172,8 +173,8 @@ This command stops the AWS web services that is responsible for transcoding and 
 java -jar s3video-0.0.1-SNAPSHOT.jar stop
 ```
 To resume after stopping, you need to do the following (via the AWS console):
-1. enable cloudfront distribution
-2. enable access to the output bucket by adding the following policy to the bucket.
+  - enable cloudfront distribution
+  - enable access to the output bucket by adding the following policy to the bucket.
 
 ```json
 {
@@ -190,4 +191,4 @@ To resume after stopping, you need to do the following (via the AWS console):
 	]
 }
 ```
-3. activate the elastic transcoder pipeline.
+  - activate the elastic transcoder pipeline.
