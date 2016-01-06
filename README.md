@@ -1,10 +1,10 @@
 # Stream Video From S3
 
 ## What s3video can do for you
-  - Upload your video to s3 for html5 video streaming
-  - Create and configure elastic transcoder pipeline to transcode your video for HLS and webm streaming
-  - Create and configure cloud front to distribute your html5 video
-  - Create aws billing alarm to help you monitor your streaming cost
+  - Upload your video to s3 for html5 video streaming, or create animated gif from your video.
+  - Create and configure elastic transcoder pipeline to transcode your video into HLS, webm or animated gif.
+  - Create and configure cloud front to distribute your content.
+  - Create aws billing alarm to help you monitor your transcoding and streaming cost.
 
 ## Build s3video
 s3video needs Java and maven. To build s3video, clone the repository and run 
@@ -151,6 +151,12 @@ java -jar s3video-0.0.1-SNAPSHOT.jar list --setting
 The push command will upload your video to s3 and starts the transcoding process. The command will exit when transcoding is complete. Replace "my_video.mp4" with the path to your video.
 ```sh
 java -jar s3video-0.0.1-SNAPSHOT.jar push my_video.mp4
+```
+
+### Create gif 
+The push command will upload your video to s3 and starts the transcoding process. The command will exit when transcoding is complete. Replace "my_video.mp4" with the path to your video.
+```sh
+java -jar s3video-0.0.1-SNAPSHOT.jar --gif push my_video.mp4
 ```
 
 ### List uploaded videos

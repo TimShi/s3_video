@@ -79,6 +79,7 @@ import com.amazonaws.services.identitymanagement.model.PutRolePolicyRequest;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.CreateBucketRequest;
+import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
@@ -132,8 +133,6 @@ public class AWSAdapter {
 		cloudfrontMinttl = Long.parseLong(PropertiesManager.getInstance().getPropertyByName("aws.cloudfront.ttl.min"));
 
 		segmentDuration = PropertiesManager.getInstance().getPropertyByName("aws.elastictranscoder.segmentduration");
-
-		outputKeyPrefix = PropertiesManager.getInstance().getPropertyByName("aws.elastictranscoder.outputkeyprefix");
 				
 		alarmThreshold = Double.parseDouble(PropertiesManager.getInstance().getPropertyByName("aws.cloudwatch.alarm.threshold"));
 		
@@ -141,6 +140,8 @@ public class AWSAdapter {
 		
 		webmPresets = mapper.readValue(PropertiesManager.getInstance().getPropertyByName("aws.elastictranscoder.webm.presets"), Map.class);
 
+		gifPresets = mapper.readValue(PropertiesManager.getInstance().getPropertyByName("aws.elastictranscoder.gif.presets"), Map.class);
+		
 	}
 		
 	private String originId;
@@ -154,14 +155,14 @@ public class AWSAdapter {
 	private long cloudfrontMinttl;
 
 	private String segmentDuration;
-
-    private String outputKeyPrefix;
 		
 	private double alarmThreshold;
 	
 	private Map<String, Object> hlsPresets;
 	
 	private Map<String, Object> webmPresets;
+
+	private Map<String, Object> gifPresets;
 
 	private AmazonIdentityManagement identityManagement = new AmazonIdentityManagementClient();
 	
@@ -432,11 +433,35 @@ public class AWSAdapter {
 	    CreateJobRequest createJobRequest = new CreateJobRequest()
 	        .withPipelineId(pipelineId)
 	        .withInput(input)
-	        .withOutputKeyPrefix(outputKeyPrefix + inputKey + "/")
+	        .withOutputKeyPrefix(inputKey + "/")
 	        .withOutputs(outputs)
 	        .withPlaylists(playlist);
 
 	    return transcoderClient.createJob(createJobRequest);
+	}
+	
+	public CreateJobResult createGifJob(String pipelineId, String inputKey) {
+		JobInput input = new JobInput().withKey(inputKey);
+	    	    
+	    List<CreateJobOutput> gifJobOutputs = new ArrayList<>();
+	    
+	    Iterator<String> gifPresetKeys = gifPresets.keySet().iterator();
+	    while (gifPresetKeys.hasNext()) {
+	    	String gifPresetKey = gifPresetKeys.next(); 
+		    CreateJobOutput gifJob = new CreateJobOutput()
+	        .withKey(gifPresetKey)
+	        .withPresetId((String)gifPresets.get(gifPresetKey));		    
+		    gifJobOutputs.add(gifJob);
+	    }
+	    
+	    // Create the job.
+	    CreateJobRequest createJobRequest = new CreateJobRequest()
+	        .withPipelineId(pipelineId)
+	        .withInput(input)
+	        .withOutputKeyPrefix(inputKey + "/")
+	        .withOutputs(gifJobOutputs);
+
+	    return transcoderClient.createJob(createJobRequest);		
 	}
 
 	//http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/GettingStarted.html
@@ -542,7 +567,7 @@ public class AWSAdapter {
 	}
 
 	public void deleteTranscodedAsset(String bucketName, String key) {
-		for (S3ObjectSummary file : s3client.listObjects(bucketName, outputKeyPrefix+key).getObjectSummaries()){
+		for (S3ObjectSummary file : s3client.listObjects(bucketName, key).getObjectSummaries()){
 			s3client.deleteObject(bucketName, file.getKey());
 		}
 	}
@@ -580,8 +605,21 @@ public class AWSAdapter {
 
 	public List<String> listKeysInOutputBucket(String bucketName) {
 		List<String> videoKeys = new ArrayList<>();
-		for (S3ObjectSummary file : s3client.listObjects(bucketName, outputKeyPrefix).getObjectSummaries()) {
-			videoKeys.add(file.getKey());
+		
+		ListObjectsRequest listFirstLevelKeyRequest = new ListObjectsRequest()
+			.withBucketName(bucketName)
+			.withDelimiter("/");
+		
+		for (String commonPrefix : s3client.listObjects(listFirstLevelKeyRequest).getCommonPrefixes()) {
+			
+			ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
+			.withBucketName(bucketName)
+			.withPrefix(commonPrefix)
+			.withDelimiter("/");
+			
+			for (S3ObjectSummary file : s3client.listObjects(listObjectsRequest).getObjectSummaries()) {
+				videoKeys.add(file.getKey());
+			}
 		}
 		return videoKeys;		
 	}

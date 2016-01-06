@@ -130,7 +130,36 @@ public class TranscodeService {
 		if (!"true".equalsIgnoreCase(transcoder.getIsInitialized())){
 			throw new TranscodeException("Transcoder not initialized");
 		}
+						
+		String key = uploadToS3(sourceFilePath);
 				
+		logger.info("Upload to s3 complete, transcode started. This may take a while");
+		
+		CreateJobResult result = awsAdapter.createTranscodeJob(transcoder.getPipelineId(), key);
+		
+		String jobId = result.getJob().getId();
+	
+		waitForJobCompletion(transcoder.getNotificationQueueUrl(), jobId);
+	}
+	
+	public void pushGif(String sourceFilePath) throws TranscodeException, InvalidNameException, IOException {
+		Transcoder transcoder = transcoderRepository.getTranscoder();
+		if (!"true".equalsIgnoreCase(transcoder.getIsInitialized())){
+			throw new TranscodeException("Transcoder not initialized");
+		}
+
+		String key = uploadToS3(sourceFilePath);
+
+		logger.info("Upload to s3 complete, transcode started. This may take a while");
+	
+		CreateJobResult result = awsAdapter.createGifJob(transcoder.getPipelineId(), key);
+
+		String jobId = result.getJob().getId();
+		
+		waitForJobCompletion(transcoder.getNotificationQueueUrl(), jobId);
+	}
+	
+	private String uploadToS3(String sourceFilePath) throws TranscodeException, InvalidNameException {
 		File assetFile = new File(sourceFilePath);
 		
 		if (!assetFile.exists() || !assetFile.isFile()) {
@@ -139,21 +168,20 @@ public class TranscodeService {
 		
 		String key = generateAssetKeyByName(assetFile.getName());
 		
-		awsAdapter.uploadAssetToS3Bucket(inputBucketName, key, assetFile, storageClass);	
-		
-		logger.info("Upload to s3 complete, transcode started. This may take a while");
-		
-		CreateJobResult result = awsAdapter.createTranscodeJob(transcoder.getPipelineId(), key);
-		
-		String jobId = result.getJob().getId();
-		
+		if (!awsAdapter.listKeysInInputBucket(inputBucketName).contains(key)){
+			awsAdapter.uploadAssetToS3Bucket(inputBucketName, key, assetFile, storageClass);				
+		}
+		return key;
+	}
+	
+	private void waitForJobCompletion(String notificationQueueUrl, String jobId) {
 		boolean done = false;
 		
 		while (!done) {
-			List<JobStatusNotification> jobStatusNotifications = awsAdapter.pollMessageFromQueueByJobId(transcoder.getNotificationQueueUrl(), jobId);
+			List<JobStatusNotification> jobStatusNotifications = awsAdapter.pollMessageFromQueueByJobId(notificationQueueUrl, jobId);
 			
 			for (JobStatusNotification jobStatus : jobStatusNotifications) {
-				logger.info("Transcode job {} with is {}", jobStatus.getJobId(), jobStatus.getState());
+				logger.info("Transcode job {} is {}", jobStatus.getJobId(), jobStatus.getState());
 				if (jobStatus.getState().isTerminalState()){					
 					done = true;
 					
@@ -162,7 +190,7 @@ public class TranscodeService {
 					}
 				}
 			}
-		}
+		}	
 	}
 	
 	/*
