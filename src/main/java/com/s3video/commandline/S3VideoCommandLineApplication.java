@@ -45,7 +45,7 @@ public class S3VideoCommandLineApplication {
 	    	TranscodeService transcodeService = new TranscodeService();
 	    	transcodeService.setAwsAdapter(awsAdapter);
 	    	transcodeService.setTranscoderRepository(new TranscoderRepository());
-	    		    		    	    	
+	    		    		    	
 			if (args.length >= 1) {
 				if (args[0].equalsIgnoreCase("configure")) {
 					if (args.length == 2 && args[1].equalsIgnoreCase("--force")) {
@@ -82,8 +82,18 @@ public class S3VideoCommandLineApplication {
 						String sourceFilePath = args[1];
 						logger.info("pushing video:" + sourceFilePath);
 						transcodeService.push(sourceFilePath);
+					} else if (args.length == 3) {
+						String flag = args[1];
+						if (! (flag.equalsIgnoreCase("--gif"))) {
+							logger.info("push [--gif] {sourceFilePath}");
+							return;
+						}
+						String sourceFilePath = args[2];						
+						//GIF preset 
+						//1351620000001-100200						
+						transcodeService.pushGif(sourceFilePath);
 					} else {
-						logger.info("push {sourceFilePath} ");
+						logger.info("push [--gif] {sourceFilePath} [{start} {end}]");
 						return;
 					}				
 				} else if (args[0].equalsIgnoreCase("delete")) {
