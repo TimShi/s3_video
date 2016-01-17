@@ -76,7 +76,7 @@
 					<archive>
 				    	<manifest>
 					    	<addClasspath>true</addClasspath>
-							<mainClass>com.s3video.commandline.S3videoCommandLineApplication</mainClass>
+							<mainClass>com.s3video.commandline.S3VideoCommandLineApplication</mainClass>
 							<classpathPrefix>libs/</classpathPrefix>
 				    	</manifest>
 				  	</archive>
