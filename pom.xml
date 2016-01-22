@@ -59,6 +59,9 @@
 		                <resource>
 		                  <directory>.</directory>
 		                  <filtering>true</filtering>
+		                  <excludes>
+		                  	<exclude>target/*</exclude>
+		                  </excludes>
 		                  <includes>
 				          	<include>**/*.properties</include>
 					      </includes>
