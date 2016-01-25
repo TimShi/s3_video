@@ -153,6 +153,9 @@ The push command will upload your video to s3 and starts the transcoding process
 java -jar s3video-0.0.1-SNAPSHOT.jar push my_video.mp4
 ```
 
+### Share uploaded videos
+Navigate to {cloudFrontDomain}/{videoName}/player.html to get the html5 video player and share the video.
+
 ### Create gif 
 The push command will upload your video to s3 and starts the transcoding process. The command will exit when transcoding is complete. Replace "my_video.mp4" with the path to your video.
 ```sh
@@ -168,11 +171,13 @@ This command will list the source videos.
 ```sh
 java -jar s3video-0.0.1-SNAPSHOT.jar list --source
 ```
+
 ### Delete videos
 This command will delete both the original and the transcoded videos. Use the --transcoded or --source flag to delete only one. Replace "myvideo" with the name of your video. This should match the name you see when you use the list command.
 ```sh
 java -jar s3video-0.0.1-SNAPSHOT.jar delete my_video
 ```
+
 ### Stop
 This command stops the AWS web services that is responsible for transcoding and streaming video. You may want to use this to temporarily shut down your streams. The transcode pipleine will also be paused.
 ```sh

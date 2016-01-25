@@ -68,7 +68,7 @@ public class TranscodeService {
 	private AWSAdapter awsAdapter;	
 	
 	private TranscoderRepository transcoderRepository;
-
+	
 	public AWSAdapter getAwsAdapter() {
 		return awsAdapter;
 	}
@@ -125,7 +125,7 @@ public class TranscodeService {
 	 * Push
 	 * Note: If video with same name already exist, the upload will succeed but the transcode won't
 	 */
-	public void push(String sourceFilePath) throws TranscodeException, IOException, InvalidNameException{
+	public String push(String sourceFilePath) throws TranscodeException, IOException, InvalidNameException{
 		Transcoder transcoder = transcoderRepository.getTranscoder();
 		if (!"true".equalsIgnoreCase(transcoder.getIsInitialized())){
 			throw new TranscodeException("Transcoder not initialized");
@@ -139,7 +139,9 @@ public class TranscodeService {
 		
 		String jobId = result.getJob().getId();
 	
-		waitForJobCompletion(transcoder.getNotificationQueueUrl(), jobId);
+		waitForJobCompletion(transcoder.getNotificationQueueUrl(), jobId);	
+		
+		return key;
 	}
 	
 	public void pushGif(String sourceFilePath) throws TranscodeException, InvalidNameException, IOException {

@@ -2,6 +2,7 @@ package com.s3video.commandline;
 
 import java.io.IOException;
 
+import org.apache.velocity.app.VelocityEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +19,7 @@ import com.s3video.commandline.properties.PropertiesManager;
 import com.s3video.commandline.repository.TranscoderRepository;
 import com.s3video.commandline.service.InvalidNameException;
 import com.s3video.commandline.service.SettingsExistException;
+import com.s3video.commandline.service.TemplateService;
 import com.s3video.commandline.service.TranscodeException;
 import com.s3video.commandline.service.TranscodeService;
 
@@ -45,7 +47,14 @@ public class S3VideoCommandLineApplication {
 	    	TranscodeService transcodeService = new TranscodeService();
 	    	transcodeService.setAwsAdapter(awsAdapter);
 	    	transcodeService.setTranscoderRepository(new TranscoderRepository());
-	    		    		    	
+
+	    	VelocityEngine velocityEngine = new VelocityEngine();
+	    	velocityEngine.init();
+	    	TemplateService templateService = new TemplateService();
+	    	templateService.setAwsAdapter(awsAdapter);
+	    	templateService.setTranscoderRepository(new TranscoderRepository());
+	    	templateService.setVelocityEngine(velocityEngine);
+
 			if (args.length >= 1) {
 				if (args[0].equalsIgnoreCase("configure")) {
 					if (args.length == 2 && args[1].equalsIgnoreCase("--force")) {
@@ -81,19 +90,24 @@ public class S3VideoCommandLineApplication {
 					if (args.length == 2) {
 						String sourceFilePath = args[1];
 						logger.info("pushing video:" + sourceFilePath);
-						transcodeService.push(sourceFilePath);
+						String key = transcodeService.push(sourceFilePath);
+						templateService.uploadPlaybackHtml(key);
 					} else if (args.length == 3) {
 						String flag = args[1];
-						if (! (flag.equalsIgnoreCase("--gif"))) {
-							logger.info("push [--gif] {sourceFilePath}");
+						if (flag.equalsIgnoreCase("--gif")) {
+							String sourceFilePath = args[2];						
+							//GIF preset 
+							//1351620000001-100200						
+							transcodeService.pushGif(sourceFilePath);							
+						} else if (flag.equalsIgnoreCase("--template")) {
+							String videoName = args[2];						
+							templateService.uploadPlaybackHtml(videoName);						
+						} else {
+							logger.info("push [--gif | --template] {sourceFilePath | videoName}");
 							return;
 						}
-						String sourceFilePath = args[2];						
-						//GIF preset 
-						//1351620000001-100200						
-						transcodeService.pushGif(sourceFilePath);
 					} else {
-						logger.info("push [--gif] {sourceFilePath} [{start} {end}]");
+						logger.info("push [--gif | --template] {sourceFilePath | videoName}");
 						return;
 					}				
 				} else if (args[0].equalsIgnoreCase("delete")) {
@@ -137,6 +151,7 @@ public class S3VideoCommandLineApplication {
 			}	
 			
 			propertiesManager.saveProperties();
+			awsAdapter.shutDownTransferManager();
 		} catch (IOException e) {
 			logger.error(e.getMessage(), e);
 		} catch (TranscodeException e) {

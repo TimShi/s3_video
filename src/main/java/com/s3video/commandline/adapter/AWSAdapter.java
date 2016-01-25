@@ -1,5 +1,6 @@
 package com.s3video.commandline.adapter;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -389,6 +390,49 @@ public class AWSAdapter {
 			throw new TranscodeException(e.getMessage());			
 		}
 	}
+	
+	public void uploadTextToS3Bucket(String bucketName, String key, String content, String storageClass) throws TranscodeException{
+		ObjectMetadata objectMetaData = new ObjectMetadata();
+		byte[] bytes = content.getBytes();
+		objectMetaData.setContentLength(bytes.length);
+		objectMetaData.setContentType("text/html; charset=utf-8");
+		try {
+			ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
+			PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, key, inputStream, objectMetaData);
+			if (storageClass.equalsIgnoreCase(StorageClass.ReducedRedundancy.name())) {
+				putObjectRequest.setStorageClass(StorageClass.ReducedRedundancy);
+			}
+			
+			final long fileSizeInBytes = bytes.length;
+			
+			putObjectRequest.setGeneralProgressListener(new ProgressListener() {
+				
+				private long bytesTransferred = 0;
+				
+				private int currentPercentage = 0;
+				
+				@Override
+				public void progressChanged(ProgressEvent progressEvent) {
+					bytesTransferred += progressEvent.getBytesTransferred();
+					int percentTransferred = (int) (bytesTransferred * 100 / fileSizeInBytes);
+					if (percentTransferred%10 == 0 && percentTransferred != currentPercentage) {
+						logger.info("Transferred {}% of {} bytes.", percentTransferred, fileSizeInBytes);
+						currentPercentage = percentTransferred;
+					}
+				}
+			});
+			
+			Upload upload = tm.upload(putObjectRequest);
+			if (upload!=null) {
+				upload.waitForCompletion();				
+			} else {
+				logger.error("Did not get upload detail from S3 for asset with key " + key);
+				throw new TranscodeException("Did not get upload detail from S3 for asset with key " + key);
+			}
+		} catch (AmazonClientException | InterruptedException e) {
+			throw new TranscodeException(e.getMessage());			
+		}
+	}
 
 	public CreateJobResult createTranscodeJob(String pipelineId, String inputKey) throws TranscodeException {
 		JobInput input = new JobInput().withKey(inputKey);
@@ -712,5 +756,9 @@ public class AWSAdapter {
 	public JobStatusNotification parseMessage(String messageBody) throws JsonParseException, JsonMappingException, IOException {
 		Notification<JobStatusNotification> notification = mapper.readValue(messageBody, new TypeReference<Notification<JobStatusNotification>>() {});
         return notification.getMessage();						
+	}
+	
+	public void shutDownTransferManager() {
+		tm.shutdownNow(false);
 	}
 }
