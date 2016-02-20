@@ -70,6 +70,7 @@
 		                  </excludes>
 		                  <includes>
 				          	<include>**/*.properties</include>
+				          	<include>**/*.vm</include>
 					      </includes>
 		                </resource>
 		              </resources>              

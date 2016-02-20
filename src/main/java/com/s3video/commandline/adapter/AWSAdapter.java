@@ -379,7 +379,6 @@ public class AWSAdapter {
 			Upload upload = tm.upload(putObjectRequest);
 			if (upload!=null) {
 				upload.waitForCompletion();				
-				tm.shutdownNow(false);
 			} else {
 				logger.error("Did not get upload detail from S3 for asset with key " + key);
 				throw new TranscodeException("Did not get upload detail from S3 for asset with key " + key);
