@@ -20,7 +20,7 @@ import com.s3video.commandline.repository.TranscoderRepository;
 public class TranscodeService {
 	final static Logger logger = LoggerFactory.getLogger(TranscodeService.class);
 
-	private static Pattern SOURCE_FILE_NAME_PATTERN = Pattern.compile("([a-zA-Z0-9]+)\\.[a-zA-Z0-9]+"); 
+	private static Pattern SOURCE_FILE_NAME_PATTERN = Pattern.compile("([a-zA-Z0-9_]+)\\.[a-zA-Z0-9]+"); 
 	
 	public TranscodeService() throws IOException {		
 		super();
