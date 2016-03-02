@@ -86,7 +86,7 @@ public class S3VideoCommandLineApplication {
 					} else {
 						logger.info("list [--source | --transcoded]");
 					}				
-				}else if (args[0].equalsIgnoreCase("push")) {
+				}else if (args[0].equalsIgnoreCase("push")) { //TODO: make all three take variable length, shouldn't need to change the service API, just loop through.
 					if (args.length == 2) {
 						String sourceFilePath = args[1];
 						logger.info("pushing video:" + sourceFilePath);

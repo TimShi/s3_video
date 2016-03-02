@@ -144,6 +144,7 @@ public class TranscodeService {
 		return key;
 	}
 	
+	//TODO: duplicate the create job part in the push method above. 
 	public void pushGif(String sourceFilePath) throws TranscodeException, InvalidNameException, IOException {
 		Transcoder transcoder = transcoderRepository.getTranscoder();
 		if (!"true".equalsIgnoreCase(transcoder.getIsInitialized())){

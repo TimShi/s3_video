@@ -117,6 +117,7 @@ public class AWSAdapter {
     private static final int MAX_NUMBER_OF_MESSAGES = 5;
     private static final int VISIBILITY_TIMEOUT = 15;
     private static final int WAIT_TIME_SECONDS = 15;    
+    private static final String THUMBNAIL_PATTERN = "thumbnail/thumbnail_{count}";
 	private static final ObjectMapper mapper = new ObjectMapper();
 
 	@SuppressWarnings("unchecked")
@@ -433,6 +434,7 @@ public class AWSAdapter {
 		}
 	}
 
+	//TODO: create thumb nail for one job and checkout where it puts the thumb nail, may need to update the delete service.
 	public CreateJobResult createTranscodeJob(String pipelineId, String inputKey) throws TranscodeException {
 		JobInput input = new JobInput().withKey(inputKey);
 	    
@@ -445,6 +447,7 @@ public class AWSAdapter {
 	    	
 		    CreateJobOutput hlsJob = new CreateJobOutput()
 	        .withKey(hlsJobKey)
+	        .withThumbnailPattern(THUMBNAIL_PATTERN)
 	        .withPresetId((String)hlsPresets.get(hlsPresetKey))
 	        .withSegmentDuration(segmentDuration);
 		    
@@ -464,6 +467,7 @@ public class AWSAdapter {
 	    	String webmPresetKey = webmPresetKeys.next(); 
 		    CreateJobOutput webmJob = new CreateJobOutput()
 	        .withKey(webmPresetKey)
+	        .withThumbnailPattern(THUMBNAIL_PATTERN)
 	        .withPresetId((String)webmPresets.get(webmPresetKey));		    
 		    webmJobOutputs.add(webmJob);
 	    }
