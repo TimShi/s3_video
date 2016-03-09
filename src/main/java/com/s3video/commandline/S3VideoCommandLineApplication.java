@@ -1,6 +1,7 @@
 package com.s3video.commandline;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.velocity.app.VelocityEngine;
 import org.slf4j.Logger;
@@ -86,12 +87,15 @@ public class S3VideoCommandLineApplication {
 					} else {
 						logger.info("list [--source | --transcoded]");
 					}				
-				}else if (args[0].equalsIgnoreCase("push")) { //TODO: make all three take variable length, shouldn't need to change the service API, just loop through.
+				}else if (args[0].equalsIgnoreCase("push")) {
 					if (args.length == 2) {
 						String sourceFilePath = args[1];
 						logger.info("pushing video:" + sourceFilePath);
-						String key = transcodeService.push(sourceFilePath);
-						templateService.uploadPlaybackHtml(key);
+						List<String> keys = transcodeService.push(sourceFilePath);
+						
+						for (String key : keys) {
+							templateService.uploadPlaybackHtml(key);
+						}
 					} else if (args.length == 3) {
 						String flag = args[1];
 						if (flag.equalsIgnoreCase("--gif")) {
@@ -103,11 +107,11 @@ public class S3VideoCommandLineApplication {
 							String videoName = args[2];						
 							templateService.uploadPlaybackHtml(videoName);						
 						} else {
-							logger.info("push [--gif | --template] {sourceFilePath | videoName}");
+							logger.info("push [--gif | --template] {sourceFileOrDirectoryPath | videoName}");
 							return;
 						}
 					} else {
-						logger.info("push [--gif | --template] {sourceFilePath | videoName}");
+						logger.info("push [--gif | --template] {sourceFileOrDirectoryPath | videoName}");
 						return;
 					}				
 				} else if (args[0].equalsIgnoreCase("delete")) {

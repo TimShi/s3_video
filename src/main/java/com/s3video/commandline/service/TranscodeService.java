@@ -2,10 +2,12 @@ package com.s3video.commandline.service;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +23,8 @@ public class TranscodeService {
 	final static Logger logger = LoggerFactory.getLogger(TranscodeService.class);
 
 	private static Pattern SOURCE_FILE_NAME_PATTERN = Pattern.compile("([a-zA-Z0-9_]+)\\.[a-zA-Z0-9]+"); 
+	private static String DIRECTORY_FOR_TRANSCODED_VIDEOS = "transcoded";
+	private static String DIRECTORY_FOR_GIF_VIDEOS = "transcoded_gif";
 	
 	public TranscodeService() throws IOException {		
 		super();
@@ -125,46 +129,94 @@ public class TranscodeService {
 	 * Push
 	 * Note: If video with same name already exist, the upload will succeed but the transcode won't
 	 */
-	public String push(String sourceFilePath) throws TranscodeException, IOException, InvalidNameException{
+	public List<String> push(String sourceFilePath) throws TranscodeException, IOException, InvalidNameException{
 		Transcoder transcoder = transcoderRepository.getTranscoder();
 		if (!"true".equalsIgnoreCase(transcoder.getIsInitialized())){
 			throw new TranscodeException("Transcoder not initialized");
 		}
-						
-		String key = uploadToS3(sourceFilePath);
+		
+		File inputFile = new File(sourceFilePath);
+		File[] assetFiles = getAssetFiles(inputFile);
+
+		File transcodedDirectory = null;
+		if (inputFile.isDirectory()) {
+			transcodedDirectory = makeDirectoryForProcessedFilesIfNotExist(inputFile, DIRECTORY_FOR_TRANSCODED_VIDEOS); 
+		} 
+
+		List<String> keys = new ArrayList<>();
+		
+		DateTime date = new DateTime();
+		for (int i = 0; i < assetFiles.length; i++) {
+			if (!assetFiles[i].isDirectory() && !assetFiles[i].isHidden()) {
+				String key = uploadToS3(assetFiles[i]);
+				logger.info("Upload to s3 complete, transcode started. This may take a while");
+				CreateJobResult result = awsAdapter.createTranscodeJob(transcoder.getPipelineId(), key);
+				String jobId = result.getJob().getId();
+				waitForJobCompletion(transcoder.getNotificationQueueUrl(), jobId);	
+				keys.add(key);
 				
-		logger.info("Upload to s3 complete, transcode started. This may take a while");
+				if (transcodedDirectory != null) {
+					assetFiles[i].renameTo(new File(transcodedDirectory, assetFiles[i].getName() + "_" + date.getMillis()));
+				}
+			}
+		}
 		
-		CreateJobResult result = awsAdapter.createTranscodeJob(transcoder.getPipelineId(), key);
-		
-		String jobId = result.getJob().getId();
-	
-		waitForJobCompletion(transcoder.getNotificationQueueUrl(), jobId);	
-		
-		return key;
+		return keys;
 	}
 	
-	//TODO: duplicate the create job part in the push method above. 
 	public void pushGif(String sourceFilePath) throws TranscodeException, InvalidNameException, IOException {
 		Transcoder transcoder = transcoderRepository.getTranscoder();
 		if (!"true".equalsIgnoreCase(transcoder.getIsInitialized())){
 			throw new TranscodeException("Transcoder not initialized");
 		}
-
-		String key = uploadToS3(sourceFilePath);
-
-		logger.info("Upload to s3 complete, transcode started. This may take a while");
-	
-		CreateJobResult result = awsAdapter.createGifJob(transcoder.getPipelineId(), key);
-
-		String jobId = result.getJob().getId();
 		
-		waitForJobCompletion(transcoder.getNotificationQueueUrl(), jobId);
+		File inputFile = new File(sourceFilePath);
+		File[] assetFiles = getAssetFiles(inputFile);		
+		File transcodedDirectory = null;
+		if (inputFile.isDirectory()) {
+			transcodedDirectory = makeDirectoryForProcessedFilesIfNotExist(inputFile, DIRECTORY_FOR_GIF_VIDEOS);
+		}
+		
+		DateTime date = new DateTime();
+		for (int i = 0; i < assetFiles.length; i++) {
+			if (!assetFiles[i].isDirectory() && !assetFiles[i].isHidden()) {
+				String key = uploadToS3(assetFiles[i]);
+				logger.info("Upload to s3 complete, transcode started. This may take a while");
+				CreateJobResult result = awsAdapter.createGifJob(transcoder.getPipelineId(), key);
+				String jobId = result.getJob().getId();
+				waitForJobCompletion(transcoder.getNotificationQueueUrl(), jobId);
+				
+				if (transcodedDirectory != null) {
+					assetFiles[i].renameTo(new File(transcodedDirectory, assetFiles[i].getName() + "_" + date.getMillis()));
+				}
+			}
+		}
 	}
 	
-	private String uploadToS3(String sourceFilePath) throws TranscodeException, InvalidNameException {
-		File assetFile = new File(sourceFilePath);
-		
+	private File makeDirectoryForProcessedFilesIfNotExist(File parentDirectory, String directoryName) throws TranscodeException {
+		File transcodedDirectory = new File(parentDirectory, directoryName);
+		if (!transcodedDirectory.exists()) {
+			transcodedDirectory.mkdir();
+		} else {
+			if (!transcodedDirectory.isDirectory()) {
+				throw new TranscodeException("Expect directory called transcoded_gifs.");
+			}
+		}
+		return transcodedDirectory;
+	}
+	
+	private File[] getAssetFiles(File inputFile) {
+		File[] assetFiles;
+		if (inputFile.isDirectory()) {
+			assetFiles = inputFile.listFiles();
+		} else {
+			assetFiles = new File[1];
+			assetFiles[0] = inputFile;
+		}
+		return assetFiles;
+	}
+	
+	private String uploadToS3(File assetFile) throws TranscodeException, InvalidNameException {		
 		if (!assetFile.exists() || !assetFile.isFile()) {
 			throw new TranscodeException("Source file does not exist");
 		}

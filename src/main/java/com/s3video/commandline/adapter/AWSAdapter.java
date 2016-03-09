@@ -434,10 +434,11 @@ public class AWSAdapter {
 		}
 	}
 
-	//TODO: create thumb nail for one job and checkout where it puts the thumb nail, may need to update the delete service.
 	public CreateJobResult createTranscodeJob(String pipelineId, String inputKey) throws TranscodeException {
 		JobInput input = new JobInput().withKey(inputKey);
 	    
+		boolean isThumbnailConfigured = false;
+		
 	    List<CreateJobOutput> hlsJobOutputs = new ArrayList<>();
 	    Iterator<String> hlsPresetKeys = hlsPresets.keySet().iterator();
 	    List<String> hlsJobKeys = new ArrayList<>();	    		
@@ -447,9 +448,13 @@ public class AWSAdapter {
 	    	
 		    CreateJobOutput hlsJob = new CreateJobOutput()
 	        .withKey(hlsJobKey)
-	        .withThumbnailPattern(THUMBNAIL_PATTERN)
 	        .withPresetId((String)hlsPresets.get(hlsPresetKey))
 	        .withSegmentDuration(segmentDuration);
+		    
+		    if (!isThumbnailConfigured) {
+		    	hlsJob.withThumbnailPattern(THUMBNAIL_PATTERN);
+		    	isThumbnailConfigured = true;
+		    }
 		    
 		    hlsJobKeys.add(hlsJobKey);
 		    hlsJobOutputs.add(hlsJob);		    
@@ -467,8 +472,13 @@ public class AWSAdapter {
 	    	String webmPresetKey = webmPresetKeys.next(); 
 		    CreateJobOutput webmJob = new CreateJobOutput()
 	        .withKey(webmPresetKey)
-	        .withThumbnailPattern(THUMBNAIL_PATTERN)
 	        .withPresetId((String)webmPresets.get(webmPresetKey));		    
+
+		    if (!isThumbnailConfigured) {
+		    	webmJob.withThumbnailPattern(THUMBNAIL_PATTERN);
+		    	isThumbnailConfigured = true;
+		    }
+
 		    webmJobOutputs.add(webmJob);
 	    }
 
