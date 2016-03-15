@@ -15,8 +15,9 @@ $ mvn clean package
 
 ## Setting Up
   - In order for s3video to work with AWS web services, create API credentials that have sufficient permissions. Rename the custom_template.properties file to custom.properties. Put the key and secret into the custom.properties file.
+  - Fill in the value for the other properties.
 
-The following permission is required, attach this policy to your user. Replace account-id with your account id.
+The following permission is required, attach this policy to your user. Replace account-id with your account id. Replace aws-s3-bucket-in-name and aws-s3-bucket-out-name with the corresponding values you put in the properties file.  
 
   - s3
   - cloudfront
@@ -119,10 +120,10 @@ The following permission is required, attach this policy to your user. Replace a
             ],
             "Effect": "Allow",
             "Resource": [
-                "arn:aws:s3:::output.s3video",
-                "arn:aws:s3:::input.s3video",
-                "arn:aws:s3:::output.s3video/*",
-                "arn:aws:s3:::input.s3video/*"
+                "arn:aws:s3:::aws-s3-bucket-out-name",
+                "arn:aws:s3:::aws-s3-bucket-in-name",
+                "arn:aws:s3:::aws-s3-bucket-out-name/*",
+                "arn:aws:s3:::aws-s3-bucket-in-name/*"
             ]
         }
     ]
@@ -149,6 +150,7 @@ java -jar s3video-0.0.1-SNAPSHOT.jar list --setting
 
 ### Upload video 
 The push command will upload your video to s3 and starts the transcoding process. The command will exit when transcoding is complete. Replace "my_video.mp4" with the path to your video.
+If you supply the path to a directory, all the videos in your directory will be transcoded.
 ```sh
 java -jar s3video-0.0.1-SNAPSHOT.jar push my_video.mp4
 ```
@@ -196,7 +198,7 @@ To resume after stopping, you need to do the following (via the AWS console):
 			"Sid": "1",
 		 	"Action": ["s3:GetObject"],
 		 	"Effect": "Allow",
-		 	"Resource": "arn:aws:s3:::output.s3video/*",
+		 	"Resource": "arn:aws:s3:::aws-s3-bucket-out-name/*",
 			"Principal": "*"
 		}
 	]
