@@ -13,6 +13,8 @@ s3video needs Java and maven. To build s3video, clone the repository and run
 $ mvn clean package
 ```
 
+This will generate a s3video-{version}.tar.gz file in the target directory. Unzip this file to the location where you want s3_video installed.
+
 ## Setting Up
   - In order for s3video to work with AWS web services, create API credentials that have sufficient permissions. Rename the custom_template.properties file to custom.properties. Put the key and secret into the custom.properties file.
   - Fill in the value for the other properties.
@@ -137,7 +139,7 @@ The following permission is required, attach this policy to your user. Replace a
 ### Initialize AWS web services
 The configure command will create and configure all the AWS web services needed to transcode and stream your vide.
 ```sh
-java -jar s3video-0.0.1-SNAPSHOT.jar configure
+./s3_video configure
 ```
 This includes creating two s3 bucket for the source video and transcoded video; an elastic transcoder pipleline to process the source video; an IAM role for the elastic transcoder to have permission to work with s3 and sns; one cloud front distribution to distribute the video; one sqs queue to process the transcode status updates; cloudwatch metric for monitoring overall spend and sns notification topics for billing notification.
 
@@ -145,14 +147,14 @@ This includes creating two s3 bucket for the source video and transcoded video; 
 This command will list your s3video settings. The most important information is the cloud front domain.
 You will use this domain to access the streaming videos.
 ```sh
-java -jar s3video-0.0.1-SNAPSHOT.jar list --setting
+./s3_video list --setting
 ```
 
 ### Upload video 
 The push command will upload your video to s3 and starts the transcoding process. The command will exit when transcoding is complete. Replace "my_video.mp4" with the path to your video.
 If you supply the path to a directory, all the videos in your directory will be transcoded.
 ```sh
-java -jar s3video-0.0.1-SNAPSHOT.jar push my_video.mp4
+./s3_video push my_video.mp4
 ```
 
 ### Share uploaded videos
@@ -161,29 +163,29 @@ Navigate to {cloudFrontDomain}/{videoName}/player.html to get the html5 video pl
 ### Create gif 
 The push command will upload your video to s3 and starts the transcoding process. The command will exit when transcoding is complete. Replace "my_video.mp4" with the path to your video.
 ```sh
-java -jar s3video-0.0.1-SNAPSHOT.jar --gif push my_video.mp4
+./s3_video --gif push my_video.mp4
 ```
 
 ### List uploaded videos
 This command will list the transcoded videos. Append the path listed here to the cloud front domain, and your video will be streaming in the browser. (Use the HLS path for Safari and webm for Chrome and Firefox).
 ```sh
-java -jar s3video-0.0.1-SNAPSHOT.jar list --transocded
+./s3_video list --transocded
 ```
 This command will list the source videos.
 ```sh
-java -jar s3video-0.0.1-SNAPSHOT.jar list --source
+./s3_video list --source
 ```
 
 ### Delete videos
 This command will delete both the original and the transcoded videos. Use the --transcoded or --source flag to delete only one. Replace "myvideo" with the name of your video. This should match the name you see when you use the list command.
 ```sh
-java -jar s3video-0.0.1-SNAPSHOT.jar delete my_video
+./s3_video delete my_video
 ```
 
 ### Stop
 This command stops the AWS web services that is responsible for transcoding and streaming video. You may want to use this to temporarily shut down your streams. The transcode pipleine will also be paused.
 ```sh
-java -jar s3video-0.0.1-SNAPSHOT.jar stop
+./s3_video stop
 ```
 To resume after stopping, you need to do the following (via the AWS console):
   - enable cloudfront distribution
