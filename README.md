@@ -7,8 +7,11 @@
   - Create aws billing alarm to help you monitor your transcoding and streaming cost.
   - Stream your video on any web page. For example [stream s3video on Jekyll site.](https://gist.github.com/TimShi/a48fa83abbc8a0242557).
 
-## Build s3video
-s3video needs Java and maven. To build s3video, clone the repository and run 
+## Download or Build s3video
+
+Download the latest build from the releases page.
+
+If you want to build s3video, you will need Java and maven. To build s3video, clone the repository and run 
 
 ```sh
 $ mvn clean package

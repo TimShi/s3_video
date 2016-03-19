@@ -1,3 +1,3 @@
 #!/bin/bash
 
-java -jar s3video-0.0.1-SNAPSHOT.jar "$@"
+java -jar s3video-0.0.1.jar "$@"
