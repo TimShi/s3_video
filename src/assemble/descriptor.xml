@@ -18,7 +18,8 @@
 				<exclude>target/**</exclude>
 			</excludes>
 			<includes>
-			   	<include>**/*.properties</include>
+			   	<include>default.properties</include>
+			   	<include>custom_template.properties</include>
 			   	<include>**/*.vm</include>
 			   	<include>s3_video.sh</include>
 			</includes>

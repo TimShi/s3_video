@@ -252,20 +252,31 @@ public class TranscodeService {
 	 * List
 	 */
 
-	public void listSourceVideos() {
+	public void listSourceVideos() throws IOException, TranscodeException {
+		Transcoder transcoder = transcoderRepository.getTranscoder();
+		if (!"true".equalsIgnoreCase(transcoder.getIsInitialized())){
+			throw new TranscodeException("Transcoder not initialized");
+		}
 		for (String key : awsAdapter.listKeysInInputBucket(inputBucketName)) {
 			logger.info(key);
 		}
 	}
 	
-	public void listTranscodedVideos() {
+	public void listTranscodedVideos() throws IOException, TranscodeException {
+		Transcoder transcoder = transcoderRepository.getTranscoder();
+		if (!"true".equalsIgnoreCase(transcoder.getIsInitialized())){
+			throw new TranscodeException("Transcoder not initialized");
+		}
 		for (String key : awsAdapter.listKeysInOutputBucket(outputBucketName)) {
 			logger.info(key);
 		}		
 	}
 	
-	public void listSettings() throws IOException {
+	public void listSettings() throws IOException, TranscodeException {
 		Transcoder transcoder = transcoderRepository.getTranscoder();
+		if (!"true".equalsIgnoreCase(transcoder.getIsInitialized())){
+			throw new TranscodeException("Transcoder not initialized");
+		}
 		logger.info("Configuration initialized: " + transcoder.getIsInitialized());
 		logger.info("CDN domain is: " + transcoder.getDistributionDomainName());			
 	}
@@ -274,25 +285,40 @@ public class TranscodeService {
 	 * Delete
 	 */	
 	
-	public void deleteAll(String key){
+	public void deleteAll(String key) throws IOException, TranscodeException{
+		Transcoder transcoder = transcoderRepository.getTranscoder();
+		if (!"true".equalsIgnoreCase(transcoder.getIsInitialized())){
+			throw new TranscodeException("Transcoder not initialized");
+		}
 		awsAdapter.deleteAsset(inputBucketName, key);
 		awsAdapter.deleteTranscodedAsset(outputBucketName, key);
 	}
 	
-	public void deleteSource(String key) {
+	public void deleteSource(String key) throws IOException, TranscodeException {
+		Transcoder transcoder = transcoderRepository.getTranscoder();
+		if (!"true".equalsIgnoreCase(transcoder.getIsInitialized())){
+			throw new TranscodeException("Transcoder not initialized");
+		}
 		awsAdapter.deleteAsset(inputBucketName, key);		
 	}
 
-	public void deleteTranscoded(String key) {
+	public void deleteTranscoded(String key) throws IOException, TranscodeException {
+		Transcoder transcoder = transcoderRepository.getTranscoder();
+		if (!"true".equalsIgnoreCase(transcoder.getIsInitialized())){
+			throw new TranscodeException("Transcoder not initialized");
+		}
 		awsAdapter.deleteTranscodedAsset(outputBucketName, key);		
 	}
 	
 	/*
 	 * Stop
 	 */
-	public void stop() throws IOException {
+	public void stop() throws IOException, TranscodeException {
 		Transcoder transcoder = transcoderRepository.getTranscoder();
-
+		if (!"true".equalsIgnoreCase(transcoder.getIsInitialized())){
+			throw new TranscodeException("Transcoder not initialized");
+		}
+		
 		awsAdapter.pausePipeLine(transcoder.getPipelineId());
 		logger.info("transcode pipeline is paused.");
 		

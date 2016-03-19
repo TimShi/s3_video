@@ -23,25 +23,54 @@
 </head>
 <body>
 <div class="container">
-    <div class="header clearfix">
-        <h3 class="text-muted">$name</h3>
+    <div class="page-header">
+        <h1>S3_Video: $name</h1>
     </div>
     <div class="row">
         <div class="col-md-6">
-            <iframe width="560" height="315" src="http://$domain/$name/video.html" frameborder="0" allowfullscreen></iframe>
+            <p>
+                This video is transcoded and published to AWS S3 using <a href="https://github.com/TimShi/s3_video">s3_video</a>, and delivered using AWS Cloudfront.
+            </p>
         </div>
+    </div>
+    <div class="row">
         <div class="col-md-6">
-            <div class="panel panel-default">
-                <div class="panel-heading">Embed</div>
-                <div class="panel-body">
-                    &lt;iframe width="560" height="315" src="http://$domain/$name/video.html" frameborder="0" allowfullscreen&gt;&lt;/iframe&gt;
-                </div>
+            <div class="embed-responsive embed-responsive-16by9">
+                <video id="video" controls>
+                    <source src="http://$domain/$name/webm" type="video/webm">
+                    <source src="http://$domain/$name/hls.m3u8">
+                    <p>
+                        To view this video please consider upgrading to a web browser that supports HTML5 video</a>
+                    </p>
+                </video>
             </div>
         </div>
     </div>
-    <footer class="footer">
-        <p>Transcoded using <a href="https://github.com/TimShi/s3_video">s3_video</a></p>
-    </footer>
+    <div class="row">        
+        <div class="col-md-6">
+            <p> 
+                <h4>
+                    Stream ID:                     
+                </h4>                
+                http://$domain/$name
+            </p>
+            <p> 
+                <h4>
+                    HTML5 Video:                    
+                </h4>                
+                To make this video responsive, use the <a href="http://getbootstrap.com/components/#responsive-embed">bootstrap response embed css</a>.
+            </p>
+            <pre class="pre-scrollable">
+&lt;video id="video" controls&gt;
+    &lt;source src="http://$domain/$name/webm" type="video/webm"&gt;
+    &lt;source src="http://$domain/$name/hls.m3u8"&gt;
+    &lt;p&gt;
+        To view this video please consider upgrading to a web browser that supports HTML5 video&lt;/a&gt;
+    &lt;/p&gt;
+&lt;/video&gt;
+            </pre>
+        </div>
+    </div>
 </div> <!-- /container -->
 </body>
 </html>

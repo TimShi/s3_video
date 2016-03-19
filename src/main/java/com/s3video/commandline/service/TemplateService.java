@@ -62,6 +62,9 @@ public class TemplateService {
 
 	public void uploadPlaybackHtml(String key) throws IOException, TranscodeException {
 		Transcoder transcoder = transcoderRepository.getTranscoder();
+		if (!"true".equalsIgnoreCase(transcoder.getIsInitialized())){
+			throw new TranscodeException("Transcoder not initialized");
+		}
 
 		Template playerTemplate = velocityEngine.getTemplate("player.vm");
 		VelocityContext context = new VelocityContext();
@@ -73,13 +76,5 @@ public class TemplateService {
 		logger.info("Uploading player html");
 		
 		awsAdapter.uploadTextToS3Bucket(outputBucketName, key + "/player.html", writer.toString(), storageClass);
-
-		writer = new StringWriter();
-		Template videoTemplate = velocityEngine.getTemplate("video.vm");
-		videoTemplate.merge(context, writer);
-
-		logger.info("Uploading video html");
-
-		awsAdapter.uploadTextToS3Bucket(outputBucketName, key + "/video.html", writer.toString(), storageClass);
 	}
 }
